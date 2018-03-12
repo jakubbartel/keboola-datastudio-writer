@@ -102,11 +102,22 @@ class Component extends BaseComponent
             'is_encrypted' => false,
             'notify' => false,
             'tags' => [
-                'datastudio',
-                sprintf('datastudio_id:%s', $this->getConfig()->getValue(['parameters', 'id'])),
+                'datastudio-data',
+                sprintf('datastudio-id.%s', $this->getConfig()->getValue(['parameters', 'id'])),
             ],
         ];
         file_put_contents($fileDataPath . '.manifest', json_encode($manifest));
+
+        $manifest = [
+            'is_public' => false,
+            'is_permanent' => false,
+            'is_encrypted' => false,
+            'notify' => false,
+            'tags' => [
+                'datastudio-schema',
+                sprintf('datastudio-id.%s', $this->getConfig()->getValue(['parameters', 'id'])),
+            ],
+        ];
         file_put_contents($schemaFilePath . '.manifest', json_encode($manifest));
     }
 
