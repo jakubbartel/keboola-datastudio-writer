@@ -8,29 +8,75 @@ class Writer
     /**
      * @var string[]
      */
-    private $metrics;
+    private $metricColumns;
+
+    /**
+     * @var Schema
+     */
+    private $schema;
 
     /**
      * Extractor constructor.
      *
-     * @param string[] $metrics
+     * @param string[] $metricColumns
      */
-    public function __construct(array $metrics)
+    public function __construct(array $metricColumns)
     {
-        $this->metrics = $metrics;
+        $this->metricColumns = $metricColumns;
+
+        $this->schema = new Schema();
     }
 
-    protected function generateDataStudioSchema(): self {
+    /**
+     * @param array $columns
+     * @return Writer
+     */
+    private function generateDataStudioSchema(array $columns): self
+    {
+        foreach($columns as $column) {
+            if(in_array($column, $this->metricColumns)) {
+                $this->schema->addMetric($column, $column);
+            } else {
+                $this->schema->addDimension($column, $column);
+            }
+        }
+
         return $this;
     }
 
     /**
-     *
+     * @param string $schemaFilePath
+     * @return Writer
      */
-    public function process(): void
+    private function schemaToFile(string $schemaFilePath): self {
+        file_put_contents($schemaFilePath, json_encode($this->schema));
+
+        return $this;
+    }
+
+    /**
+     * @param string $tableDataPath
+     * @param string $fileDataPath
+     * @return Writer
+     */
+    private function copyTableToFile(string $tableDataPath, string $fileDataPath): self
     {
-        // generateDataStudioSchema($manifest, $metrics);
-        // copy table to file
+        copy($tableDataPath, $fileDataPath);
+
+        return $this;
+    }
+
+    /**
+     * @param array $columns
+     * @param string $tableDataPath
+     * @param string $fileDataPath
+     * @param string $schemaFilePath
+     */
+    public function process(array $columns, string $tableDataPath, string $fileDataPath, string $schemaFilePath): void
+    {
+        $this->generateDataStudioSchema($columns)->schemaToFile($schemaFilePath);
+
+        $this->copyTableToFile($tableDataPath, $fileDataPath);
     }
 
 }

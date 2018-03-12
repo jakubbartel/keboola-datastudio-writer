@@ -21,6 +21,8 @@ class ConfigDefinition extends BaseConfigDefinition
             ->children()
                 ->scalarNode('metrics')
                 ->end()
+                ->scalarNode('id')
+                ->end()
             ->end();
 
         return $parametersNode;
