@@ -2,6 +2,8 @@
 
 namespace Keboola\DataStudioWriter;
 
+use ZipArchive;
+
 class Writer
 {
 
