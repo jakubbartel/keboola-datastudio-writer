@@ -85,6 +85,23 @@ class Writer
      * @param string $fileDataPath
      * @return Writer
      */
+    private function copyZipTableToFile(string $tableDataPath, string $fileDataPath): self
+    {
+        $zip = new ZipArchive;
+
+        if($zip->open($fileDataPath, ZipArchive::CREATE) === true) {
+            $zip->addFile($tableDataPath);
+            $zip->close();
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param string $tableDataPath
+     * @param string $fileDataPath
+     * @return Writer
+     */
     private function copyGzTableSampleToFile(string $tableDataPath, string $fileDataPath, int $limitBytes): self
     {
         $f = fopen($tableDataPath, 'r');
@@ -127,6 +144,7 @@ class Writer
 
         $this->copyTableToFile($tableDataPath, $fileDataPath);
         $this->copyGzTableToFile($tableDataPath, $fileDataPath . '.gz');
+        $this->copyZipTableToFile($tableDataPath, $fileDataPath . '.zip');
         $this->copyGzTableSampleToFile($tableDataPath, $fileDataPath . '.sample.gz', 90 * 1024);
     }
 
