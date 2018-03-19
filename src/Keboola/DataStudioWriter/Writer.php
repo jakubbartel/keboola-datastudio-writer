@@ -67,6 +67,55 @@ class Writer
     }
 
     /**
+     * @param string $tableDataPath
+     * @param string $fileDataPath
+     * @return Writer
+     */
+    private function copyGzTableToFile(string $tableDataPath, string $fileDataPath): self
+    {
+        $gz = gzopen($fileDataPath,'wb9');
+        gzwrite($gz, file_get_contents($tableDataPath));
+        gzclose($gz);
+
+        return $this;
+    }
+
+    /**
+     * @param string $tableDataPath
+     * @param string $fileDataPath
+     * @return Writer
+     */
+    private function copyGzTableSampleToFile(string $tableDataPath, string $fileDataPath, int $limitBytes): self
+    {
+        $f = fopen($tableDataPath, 'r');
+
+        $sample = '';
+        $sampleCompressed = '';
+
+        $i_line = 0;
+
+        while(($line = fgets($f)) !== false) {
+            $i_line += 1;
+
+            $sample .= $line;
+
+            $compressed = gzencode($sample);
+
+            if($i_line > 1000 || strlen($compressed) > $limitBytes) {
+                break;
+            }
+
+            $sampleCompressed = $compressed;
+        }
+
+        fclose($f);
+
+        file_put_contents($fileDataPath, $sampleCompressed);
+
+        return $this;
+    }
+
+    /**
      * @param array $columns
      * @param string $tableDataPath
      * @param string $fileDataPath
@@ -77,6 +126,8 @@ class Writer
         $this->generateDataStudioSchema($columns)->schemaToFile($schemaFilePath);
 
         $this->copyTableToFile($tableDataPath, $fileDataPath);
+        $this->copyGzTableToFile($tableDataPath, $fileDataPath . '.gz');
+        $this->copyGzTableSampleToFile($tableDataPath, $fileDataPath . '.sample.gz', 90 * 1024);
     }
 
 }

@@ -115,6 +115,30 @@ class Component extends BaseComponent
             'notify' => false,
             'tags' => [
                 'jakub-bartel.wr-data-studio',
+                sprintf('datastudio-data-gz.%s', $this->getConfig()->getValue(['parameters', 'id'])),
+            ],
+        ];
+        file_put_contents($fileDataPath . '.gz' . '.manifest', json_encode($manifest));
+
+        $manifest = [
+            'is_public' => false,
+            'is_permanent' => false,
+            'is_encrypted' => false,
+            'notify' => false,
+            'tags' => [
+                'jakub-bartel.wr-data-studio',
+                sprintf('datastudio-data-sample-gz.%s', $this->getConfig()->getValue(['parameters', 'id'])),
+            ],
+        ];
+        file_put_contents($fileDataPath . '.sample.gz' . '.manifest', json_encode($manifest));
+
+        $manifest = [
+            'is_public' => false,
+            'is_permanent' => false,
+            'is_encrypted' => false,
+            'notify' => false,
+            'tags' => [
+                'jakub-bartel.wr-data-studio',
                 sprintf('datastudio-schema.%s', $this->getConfig()->getValue(['parameters', 'id'])),
             ],
         ];
