@@ -18,7 +18,7 @@ To let Data Studio manage a connection to KBC it needs just an API token and id 
 ### [Data Studio](https://datastudio.google.com) source set up:
 - go to Data Sources (left menu) or in an existing report add a _Data Source_ in _Resources_ menu
 - click _Developers_ button on the right
-- fill in _Deployment id_ `AKfycbwKVuH9fWsrh358JPu-2JdVfH40UsobIclGY6XOAD_cEvSaf2sA5AYoWuLeSaM7w9Pf`
+- fill in _Deployment id_ `AKfycbxFFSa9nwyQGo4JwK5WlYO8C6o1c2ySSIwIrgXLqLwQchSwmK7UTE9d8a-geCHP3jwe`
 - select _Keboola_ data source
 - fill in required configuration:
   - Keboola Writer ID - copy id of the previously created writer (last number in browser's address bar)
