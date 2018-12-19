@@ -80,11 +80,19 @@ class Component extends BaseComponent
 
     /**
      * The source of life.
+     *
+     * @throws \Exception
      */
     public function run() : void
     {
+        if(getenv('KBC_CONFIGID') === false) {
+            throw new \Exception('Cannot read required environment variable "KBC_CONFIGID"');
+        }
+
+        $configId = intval(getenv('KBC_CONFIGID'));
+
         $metrics = explode(',', $this->getConfig()->getValue(['parameters', 'metrics'], ''));
-        $writer = new Writer($metrics);
+        $writer = new Writer($configId, $metrics);
 
         $tableConfig = $this->getInputTableConfig();
         $manifest = $this->getTableManifest($tableConfig);
@@ -92,7 +100,7 @@ class Component extends BaseComponent
         $columns = $manifest['columns'];
         $tableDataPath = $this->getTableDataPath($tableConfig);
         $fileDataPath = $this->getOutputFilePath($tableConfig);
-        $schemaFilePath = $this->getOutputSchemaPath($tableConfig);;
+        $schemaFilePath = $this->getOutputSchemaPath($tableConfig);
 
         $writer->process($columns, $tableDataPath, $fileDataPath, $schemaFilePath);
 
@@ -103,31 +111,7 @@ class Component extends BaseComponent
             'notify' => false,
             'tags' => [
                 'jakub-bartel.wr-data-studio',
-                sprintf('datastudio-data.%s', $this->getConfig()->getValue(['parameters', 'id'])),
-            ],
-        ];
-        file_put_contents($fileDataPath . '.manifest', json_encode($manifest));
-
-        $manifest = [
-            'is_public' => false,
-            'is_permanent' => false,
-            'is_encrypted' => false,
-            'notify' => false,
-            'tags' => [
-                'jakub-bartel.wr-data-studio',
-                sprintf('datastudio-data-gz.%s', $this->getConfig()->getValue(['parameters', 'id'])),
-            ],
-        ];
-        file_put_contents($fileDataPath . '.gz' . '.manifest', json_encode($manifest));
-
-        $manifest = [
-            'is_public' => false,
-            'is_permanent' => false,
-            'is_encrypted' => false,
-            'notify' => false,
-            'tags' => [
-                'jakub-bartel.wr-data-studio',
-                sprintf('datastudio-data-zip.%s', $this->getConfig()->getValue(['parameters', 'id'])),
+                sprintf('datastudio-data-zip.%s', $configId),
             ],
         ];
         file_put_contents($fileDataPath . '.zip' . '.manifest', json_encode($manifest));
@@ -139,10 +123,10 @@ class Component extends BaseComponent
             'notify' => false,
             'tags' => [
                 'jakub-bartel.wr-data-studio',
-                sprintf('datastudio-data-sample-gz.%s', $this->getConfig()->getValue(['parameters', 'id'])),
+                sprintf('datastudio-data-sample-zip.%s', $configId),
             ],
         ];
-        file_put_contents($fileDataPath . '.sample.gz' . '.manifest', json_encode($manifest));
+        file_put_contents($fileDataPath . '.sample.zip' . '.manifest', json_encode($manifest));
 
         $manifest = [
             'is_public' => false,
@@ -151,7 +135,7 @@ class Component extends BaseComponent
             'notify' => false,
             'tags' => [
                 'jakub-bartel.wr-data-studio',
-                sprintf('datastudio-schema.%s', $this->getConfig()->getValue(['parameters', 'id'])),
+                sprintf('datastudio-schema.%s', $configId),
             ],
         ];
         file_put_contents($schemaFilePath . '.manifest', json_encode($manifest));

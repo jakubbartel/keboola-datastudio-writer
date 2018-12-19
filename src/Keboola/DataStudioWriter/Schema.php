@@ -38,7 +38,7 @@ class Schema implements JsonSerializable
         $this->fields[] = [
             'name' => $name,
             'label' => $label,
-            'dataType' => 'STRING',
+            'dataType' => 'NUMBER',
             'semantics' => [
                 'conceptType' => 'METRIC',
                 'isReaggregatable' => true,

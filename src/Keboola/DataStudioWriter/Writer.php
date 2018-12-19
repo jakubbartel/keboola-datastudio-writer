@@ -2,10 +2,18 @@
 
 namespace Keboola\DataStudioWriter;
 
+use Keboola\Csv;
+use Keboola\DataStudioWriter\Exception\TableCsvReadException;
+use Keboola\DataStudioWriter\Exception\TableCsvWriteException;
 use ZipArchive;
 
 class Writer
 {
+
+    /**
+     * @var int
+     */
+    private $configId;
 
     /**
      * @var string[]
@@ -20,10 +28,13 @@ class Writer
     /**
      * Extractor constructor.
      *
+     * @param int $configId
      * @param string[] $metricColumns
      */
-    public function __construct(array $metricColumns)
+    public function __construct(int $configId, array $metricColumns)
     {
+        $this->configId = $configId;
+
         $this->metricColumns = $metricColumns;
 
         $this->schema = new Schema();
@@ -50,34 +61,9 @@ class Writer
      * @param string $schemaFilePath
      * @return Writer
      */
-    private function schemaToFile(string $schemaFilePath): self {
+    private function schemaToFile(string $schemaFilePath): self
+    {
         file_put_contents($schemaFilePath, json_encode($this->schema));
-
-        return $this;
-    }
-
-    /**
-     * @param string $tableDataPath
-     * @param string $fileDataPath
-     * @return Writer
-     */
-    private function copyTableToFile(string $tableDataPath, string $fileDataPath): self
-    {
-        copy($tableDataPath, $fileDataPath);
-
-        return $this;
-    }
-
-    /**
-     * @param string $tableDataPath
-     * @param string $fileDataPath
-     * @return Writer
-     */
-    private function copyGzTableToFile(string $tableDataPath, string $fileDataPath): self
-    {
-        $gz = gzopen($fileDataPath,'wb9');
-        gzwrite($gz, file_get_contents($tableDataPath));
-        gzclose($gz);
 
         return $this;
     }
@@ -92,7 +78,8 @@ class Writer
         $zip = new ZipArchive;
 
         if($zip->open($fileDataPath, ZipArchive::CREATE) === true) {
-            $zip->addFile($tableDataPath);
+            $zip->addFile($tableDataPath, 'data.csv');
+
             $zip->close();
         }
 
@@ -102,34 +89,65 @@ class Writer
     /**
      * @param string $tableDataPath
      * @param string $fileDataPath
+     * @param int $limitRows
+     * @param int $limitBytes
      * @return Writer
+     * @throws TableCsvReadException
+     * @throws TableCsvWriteException
      */
-    private function copyGzTableSampleToFile(string $tableDataPath, string $fileDataPath, int $limitBytes): self
+    private function copyZipTableSampleToFile(
+        string $tableDataPath,
+        string $fileDataPath,
+        int $limitRows,
+        int $limitBytes
+    ): self
     {
-        $f = fopen($tableDataPath, 'r');
+        try {
+            $csvFile = new Csv\CsvReader($tableDataPath);
+        } catch(Csv\Exception $e) {
+            throw new TableCsvReadException('Cannot read csv table');
+        }
 
-        $sample = '';
-        $sampleCompressed = '';
+        $sampleTmpTablePath = '/tmp/sample_table.csv';
+        $sampleTmpZipTablePath = '/tmp/sample_table.csv.zip';
 
-        $i_line = 0;
+        try {
+            $sampleTmpTable = new Csv\CsvWriter($sampleTmpTablePath);
+        } catch(Csv\InvalidArgumentException | Csv\Exception $e) {
+            throw new TableCsvWriteException('Cannot write csv table');
+        }
 
-        while(($line = fgets($f)) !== false) {
-            $i_line += 1;
+        $rows = 0;
 
-            $sample .= $line;
-
-            $compressed = gzencode($sample);
-
-            if($i_line > 1000 || strlen($compressed) > $limitBytes) {
+        foreach($csvFile as $row) {
+            if($rows >= $limitRows) {
                 break;
             }
 
-            $sampleCompressed = $compressed;
+            try {
+                $sampleTmpTable->writeRow($row);
+            } catch(Csv\Exception $e) {
+                throw new TableCsvWriteException('Cannot write csv table data');
+            }
+
+            $zip = new ZipArchive;
+
+            if($zip->open($sampleTmpZipTablePath, ZipArchive::CREATE) === true) {
+                $zip->addFile($sampleTmpTablePath, 'data.csv');
+
+                $zip->close();
+            }
+
+            $size = filesize($sampleTmpZipTablePath);
+
+            if($size > $limitBytes) {
+                break;
+            }
+
+            copy($sampleTmpZipTablePath, $fileDataPath);
+
+            $rows++;
         }
-
-        fclose($f);
-
-        file_put_contents($fileDataPath, $sampleCompressed);
 
         return $this;
     }
@@ -139,15 +157,15 @@ class Writer
      * @param string $tableDataPath
      * @param string $fileDataPath
      * @param string $schemaFilePath
+     * @throws TableCsvReadException
+     * @throws TableCsvWriteException
      */
     public function process(array $columns, string $tableDataPath, string $fileDataPath, string $schemaFilePath): void
     {
         $this->generateDataStudioSchema($columns)->schemaToFile($schemaFilePath);
 
-        $this->copyTableToFile($tableDataPath, $fileDataPath);
-        $this->copyGzTableToFile($tableDataPath, $fileDataPath . '.gz');
         $this->copyZipTableToFile($tableDataPath, $fileDataPath . '.zip');
-        $this->copyGzTableSampleToFile($tableDataPath, $fileDataPath . '.sample.gz', 90 * 1024);
+        $this->copyZipTableSampleToFile($tableDataPath, $fileDataPath . '.sample.zip', 1000, 90 * 1024);
     }
 
 }

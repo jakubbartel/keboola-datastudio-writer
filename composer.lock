@@ -1,11 +1,57 @@
 {
     "_readme": [
         "This file locks the dependencies of your project to a known state",
-        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "28cbc36b3fb7bd98882baa3af7639c67",
+    "content-hash": "b5d584768330ab91320892d65ff7ac1b",
     "packages": [
+        {
+            "name": "keboola/csv",
+            "version": "2.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/keboola/php-csv.git",
+                "reference": "d46e83e973aeec11dbebe55deb6eb9c0f14cd271"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/keboola/php-csv/zipball/d46e83e973aeec11dbebe55deb6eb9c0f14cd271",
+                "reference": "d46e83e973aeec11dbebe55deb6eb9c0f14cd271",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.6"
+            },
+            "require-dev": {
+                "codeclimate/php-test-reporter": "^0.4",
+                "phpunit/phpunit": "^5.7",
+                "squizlabs/php_codesniffer": "^3.2"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Keboola\\Csv\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Keboola",
+                    "email": "devel@keboola.com"
+                }
+            ],
+            "description": "Keboola CSV reader and writer",
+            "homepage": "http://keboola.com",
+            "keywords": [
+                "csv",
+                "rfc4180"
+            ],
+            "time": "2018-05-18T09:12:21+00:00"
+        },
         {
             "name": "keboola/php-component",
             "version": "dev-master",
@@ -2011,7 +2057,10 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": "^7.1"
+        "php": "^7.1",
+        "ext-zlib": "*",
+        "ext-zip": "*",
+        "ext-json": "*"
     },
     "platform-dev": []
 }
